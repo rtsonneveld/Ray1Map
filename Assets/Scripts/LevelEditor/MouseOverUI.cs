@@ -48,6 +48,15 @@ namespace R1Engine
                                        $"Pivot: ({e.ObjData.Pivot.x}, {e.ObjData.Pivot.y})";
                 }
 
+                if (e.ObjData is Unity_Object_R1 r1Data) {
+
+                    var flags = r1Data.ObjManager?.EventFlags?.ElementAtOrDefault((ushort) r1Data.EventData.Type);
+
+                    if (flags.HasValue) {
+                        textGraphic.text += $"{Environment.NewLine}Flags: " + flags.Value.ToString();
+                    }
+                }
+
                 // Set debug text
                 Controller.obj.tempDebugText.text = Settings.ShowDebugInfo 
                     ? $"{e.ObjData.DebugText}{Environment.NewLine}" +

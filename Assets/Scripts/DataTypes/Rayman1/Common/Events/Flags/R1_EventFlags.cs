@@ -11,7 +11,7 @@ namespace R1Engine
         IsBalle = 1 << 1, // Indicates if the event is TYPE_BALLE1 or TYPE_BALLE2
         NoCollision = 1 << 2, // Indicates if the event has no collision - does not include follow
         HurtsRayman = 1 << 3, // Indicates if the event damages Rayman
-        Flag_04 = 1 << 4,
+        AlwaysActive = 1 << 4, // Indicates if the event is always set to active
         HasDetectZone = 1 << 5, // Indicates if the detect zone should be set
         Flag_06 = 1 << 6,
         IsBoss = 1 << 7, // Indicates if the boss bar should show
