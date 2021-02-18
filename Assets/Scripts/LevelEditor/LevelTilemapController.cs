@@ -846,6 +846,9 @@ namespace R1Engine
         public Unity_Tile SetTypeAtPos(int x, int y, ushort collisionType) 
         {
             var map = LevelEditorData.Level.Maps[LevelEditorData.CurrentMap];
+            if (x < 0 || x >= map.Width || y < 0 || y >= map.Height) {
+                return null;
+            }
 
             // Update tile graphics
             for (int i = 0; i < CollisionTilemaps.Length; i++) {

@@ -205,12 +205,19 @@ namespace R1Engine
                 null);
         }
 
+
+        public override UniTask SaveLevelAsync(Context context, Unity_Level lvl)
+        {
+            return SaveLevelAsync(context, lvl, true);
+        }
+
         /// <summary>
         /// Saves the specified level
         /// </summary>
         /// <param name="context">The serialization context</param>
         /// <param name="lvl">The level</param>
-        public override UniTask SaveLevelAsync(Context context, Unity_Level lvl)
+        /// /// <param name="createISO">Whether to create an ISO or not</param>
+        public UniTask SaveLevelAsync(Context context, Unity_Level lvl, bool createISO)
         {
             // Menu levels can't be saved
             if (context.Settings.R1_World == R1_World.Menu)
@@ -276,7 +283,9 @@ namespace R1Engine
             FileFactory.Write<R1_PS1_LevFile>(lvlPath, context);
 
             // Create ISO for the modified data
-            CreateISO(context);
+            if (createISO) {
+                CreateISO(context);
+            }
 
             return UniTask.CompletedTask;
         }
