@@ -628,6 +628,8 @@ public class SettingsWindow : UnityWindow
                         // Randomize (only first map for now)
                         CageLocationRandomizer.Randomize(level, world.Index + lvl + RandomizerSeed);
 
+                        context.Close();
+
                         // Save the level
                         bool saveISO = world == worlds.Last() && lvl == world.Maps.Last();
 
