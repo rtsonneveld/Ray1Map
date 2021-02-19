@@ -125,7 +125,7 @@ namespace R1Engine
             List<Unity_Object_R1> events = level.EventData.Select(o => o as Unity_Object_R1).ToList();
 
             var spawningSpots = events
-                .Where(x => x.ObjCollision.Length == 0 && !x.IsAlways && !x.IsEditor && !BannedTargets.Contains(x.EventData.Type))
+                .Where(x => (x.ObjCollision == null || x.ObjCollision.Length == 0) && !x.IsAlways && !x.IsEditor && !BannedTargets.Contains(x.EventData.Type))
                 .Select(x => x).ToList();
 
             foreach(var obj in events) {
