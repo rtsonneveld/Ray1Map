@@ -24,6 +24,7 @@ namespace R1Engine
 			"l0a08",
 			"l0b",
 			"s",
+			"s0",
 			"s1",
 			"s2",
 			"s3",
@@ -78,7 +79,7 @@ namespace R1Engine
 		public string GetLevelPath(GameSettings settings) => $"l0a0{settings.Level+1}";
 		public string GetBackgroundTileSetPath(GameSettings settings, Gameloft_RRR_LevelList levelList) => $"ts{GetWorldIndex(settings, levelList)}";
 		public string GetForegroundTileSetPath(GameSettings settings, Gameloft_RRR_LevelList levelList) => $"t{GetWorldIndex(settings, levelList)}";
-		public string GetPuppetPath(int i) => i > 0 ?  $"s{i}" : i == 0 ? "d1" : "s";
+		public string GetPuppetPath(int i) => i >= 0 ?  $"s{i}" : "s";
 
 		public override async UniTask LoadFilesAsync(Context context) {
 			await context.AddLinearSerializedFileAsync(FixFilePath);
@@ -206,13 +207,24 @@ namespace R1Engine
             };
 
 			// Load objects
-			var objManager = new Unity_ObjectManager_GameloftRRR(context, LoadPuppets(context));
+			var objManager = new Unity_ObjectManager_GameloftRRR(context, LoadPuppets(context), objs.Objects);
+			var unityObjs = objs.Objects.Select((o, i) => (Unity_Object)(new Unity_Object_GameloftRRR(objManager, o))).ToList();
+
+			// Set palette index for loops
+			var world = GetWorldIndex(context.Settings, levelList);
+			if (world == 2) {
+				foreach (var uo in unityObjs) {
+					if (((Unity_Object_GameloftRRR)uo).Object.Type == 8) {
+						((Unity_Object_GameloftRRR)uo).PaletteIndex = 1;
+					}
+				}
+			}
 
 			// Return level
 			return new Unity_Level(
                 maps: maps,
                 objManager: objManager,
-                eventData: objs.Objects.Select((o,i) => (Unity_Object)(new Unity_Object_GameloftRRR(objManager,o))).ToList(),
+                eventData: unityObjs,
 				localization: LoadLocalization(context),
 				defaultMap: 1,
 				defaultCollisionMap: 2,
