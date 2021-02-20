@@ -128,6 +128,8 @@ namespace R1Engine
                 .Where(x => (x.ObjCollision == null || x.ObjCollision.Length == 0) && !x.IsAlways && !x.IsEditor && !BannedTargets.Contains(x.EventData.Type))
                 .Select(x => x).ToList();
 
+            int cageCount = 0;
+
             foreach(var obj in events) {
 
                 if (obj.EventData.Type != R1_EventType.TYPE_CAGE) continue;
@@ -158,6 +160,8 @@ namespace R1Engine
                     tries++;
 
                 } while (!PositionSafe(level, GetCenteredPos(obj)) && tries < 100);
+
+                Debug.Log($"Move cage at {originalObjPos} to {spawningSpot.Item2.EventData.Type} at {spawningSpot.Item1}");
 
                 if (spawningSpot.Item2 != null) { 
 
@@ -197,6 +201,8 @@ namespace R1Engine
                 }
 
             }
+
+            Debug.Log("Finished");
         }
 
         private static bool PositionSafe(Unity_Level level, Vector2 coords)
@@ -219,12 +225,13 @@ namespace R1Engine
                 }
             }
 
+            /*
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 0; j++) {
 
                     tilemapController.SetTypeAtPos(x + i, y + j, (ushort)R1_TileCollisionType.Bounce);
                 }
-            }
+            }*/
 
 
             return true;

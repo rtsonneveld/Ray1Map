@@ -1,5 +1,9 @@
 ﻿using System;
 using System.Linq;
+using Cysharp.Threading.Tasks;
+using R1Engine.Serialize;
+using UnityEngine;
+using Random = System.Random;
 
 namespace R1Engine
 {
@@ -8,6 +12,76 @@ namespace R1Engine
     /// </summary>
     public static class Randomizer
     {
+
+
+        #region Randomizer
+
+        public static async UniTask BatchRandomizeAsync()
+        {
+            try {
+                // Get the settings
+                var settings = Settings.GetGameSettings;
+
+                // Init
+                await LevelEditorData.InitAsync(settings);
+
+                var manager = Settings.GetGameManager;
+
+                // Get the flags
+                var flag = Settings.RandomizerFlags;
+
+                // Enumerate every world
+                var worlds = manager.GetLevels(settings).First().Worlds;
+                foreach (var world in worlds) {
+                    // Set the world
+                    settings.World = world.Index;
+
+                    // Enumerate every level
+                    foreach (var lvl in world.Maps) {
+
+                        Debug.Log("World: " + world.Index + ", lvl: " + lvl);
+
+                        // Set the level
+                        settings.Level = lvl;
+
+                        // Create the context
+                        using (var context = new Context(settings)) {
+
+                            // Load the files
+                            await manager.LoadFilesAsync(context);
+
+                            // Load the level
+                            var level = await manager.LoadAsync(context, true);
+
+                            // Randomize (only first map for now)
+                            Randomizer.Randomize(level, flag, $"{world.Index},{lvl},{Settings.RandomizerSeed}".GetHashCode(), 0);
+
+                            context.Close();
+
+                            // Save the level
+                            bool saveISO = world == worlds.Last() && lvl == world.Maps.Last();
+
+                            if (manager is R1_PS1_Manager ps1Manager) {
+                                await ps1Manager.SaveLevelAsync(context, level, false);
+
+                                if (saveISO) {
+                                    Debug.Log("Saving ISO");
+                                    ps1Manager.CreateISO(context);
+                                }
+
+                            } else {
+                                await manager.SaveLevelAsync(context, level);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                Debug.LogError(ex);
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Randomizes the events in a level based on the flags
         /// </summary>
@@ -75,6 +149,11 @@ namespace R1Engine
 
                 if (flags.HasFlag(RandomizerFlags.Type))
                     eventData.EventData.Type = (R1_EventType)random.Next(0, 255);
+            }
+
+
+            if (flags.HasFlag(RandomizerFlags.RobinsCageRandomizer)) {
+                CageLocationRandomizer.Randomize(level, seed);
             }
         }
     }

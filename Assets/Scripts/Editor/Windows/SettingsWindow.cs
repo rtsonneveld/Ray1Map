@@ -509,19 +509,16 @@ public class SettingsWindow : UnityWindow
 
         DrawHeader("Randomizer");
 
-        if (EditorButton("Run Batch Randomizer"))
-            await BatchRandomizeAsync();
-
-        if (EditorButton("Run Batch Randomizer (Robin's Cage Randomizer)"))
-            await BatchRandomizeCageLocationsAsync();
-
-        if (EditorButton("Randomize Cages")) {
-            CageLocationRandomizer.Randomize(LevelEditorData.Level, null);
+        if (EditorButton("Run Randomizer")) {
+            Randomizer.Randomize(LevelEditorData.Level, Settings.RandomizerFlags, Settings.RandomizerSeed.GetHashCode(), 0);
         }
 
-        RandomizerSeed = EditorField("Seed", RandomizerSeed);
+        if (EditorButton("Run Batch Randomizer"))
+            await Randomizer.BatchRandomizeAsync();
 
-        RandomizerFlags = (RandomizerFlags)EditorGUI.EnumFlagsField(GetNextRect(ref YPos), "Flags", RandomizerFlags);
+        Settings.RandomizerSeed = EditorField("Seed", Settings.RandomizerSeed);
+
+        Settings.RandomizerFlags = (RandomizerFlags)EditorGUI.EnumFlagsField(GetNextRect(ref YPos), "Flags", Settings.RandomizerFlags);
 
         TotalyPos = YPos;
         GUI.EndScrollView();
@@ -532,124 +529,6 @@ public class SettingsWindow : UnityWindow
             Dirty = false;
         }
     }
-
-    #region Randomizer
-
-    private async UniTask BatchRandomizeAsync()
-    {
-        try
-        {
-            // Get the settings
-            var settings = Settings.GetGameSettings;
-
-            // Init
-            await LevelEditorData.InitAsync(settings);
-
-            // Get the manager
-            var manager = Settings.GetGameManager;
-
-            // Get the flags
-            var flag = RandomizerFlags;
-
-            // Enumerate every world
-            foreach (var world in manager.GetLevels(settings).First().Worlds)
-            {
-                // Set the world
-                settings.World = world.Index;
-
-                // Enumerate every level
-                foreach (var lvl in world.Maps)
-                {
-                    // Set the level
-                    settings.Level = lvl;
-
-                    // Create the context
-                    var context = new Context(settings);
-
-                    // Load the files
-                    await manager.LoadFilesAsync(context);
-
-                    // Load the level
-                    var level = await manager.LoadAsync(context, true);
-
-                    // Randomize (only first map for now)
-                    Randomizer.Randomize(level, flag, world.Index + lvl + RandomizerSeed, 0);
-
-                    // Save the level
-                    await manager.SaveLevelAsync(context, level);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex);
-        }
-    }
-
-    private async UniTask BatchRandomizeCageLocationsAsync()
-    {
-        try {
-            // Get the settings
-            var settings = Settings.GetGameSettings;
-
-            // Init
-            await LevelEditorData.InitAsync(settings);
-
-            // Get the manager
-            if (!(Settings.GetGameManager is R1_PS1_Manager manager)) {
-
-                Debug.LogError("This can only be used on the PS1 version");
-                return;
-            }
-
-            // Get the flags
-            var flag = RandomizerFlags;
-
-            // Enumerate every world
-            var worlds = manager.GetLevels(settings).First().Worlds;
-            foreach (var world in worlds) {
-                // Set the world
-                settings.World = world.Index;
-
-                // Enumerate every level
-                foreach (var lvl in world.Maps) {
-                    // Set the level
-                    settings.Level = lvl;
-
-                    // Create the context
-                    using (var context = new Context(settings)) {
-
-                        // Load the files
-                        await manager.LoadFilesAsync(context);
-
-                        // Load the level
-                        var level = await manager.LoadAsync(context, true);
-
-                        // Randomize (only first map for now)
-                        CageLocationRandomizer.Randomize(level, world.Index + lvl + RandomizerSeed);
-
-                        context.Close();
-
-                        // Save the level
-                        bool saveISO = world == worlds.Last() && lvl == world.Maps.Last();
-
-                        if (saveISO) {
-                            Debug.Log("Saving ISO");
-                        }
-
-                        await manager.SaveLevelAsync(context, level, saveISO);
-                    }
-                }
-            }
-        } catch (Exception ex) {
-            Debug.LogError(ex);
-        }
-    }
-
-    private int RandomizerSeed { get; set; }
-    private RandomizerFlags RandomizerFlags { get; set; }
-
-    #endregion
 
     #region Default Memory Options
 

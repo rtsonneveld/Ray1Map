@@ -137,6 +137,11 @@ namespace R1Engine {
         /// </summary>
         public static bool Log { get; set; }
 
+        /// Randomize settings
+        public static string RandomizerSeed { get; set; }
+        public static RandomizerFlags RandomizerFlags { get; set; }
+        public static bool RandomizeBatchAfterLoad { get; set; }
+
         /// <summary>
         /// Gets the current directory based on the selected mode
         /// </summary>
@@ -252,10 +257,14 @@ namespace R1Engine {
             Tool_mkpsxiso_filePath = s.SerializeString("Tool_mkpsxiso_filePath", Tool_mkpsxiso_filePath, "mkpsxiso");
             HideDirSettings = s.SerializeBool("HideDirSettings", HideDirSettings);
 
+            RandomizerSeed = s.SerializeString("RandomizerSeed", RandomizerSeed, "RandomizerSeed");
+            RandomizerFlags = (RandomizerFlags)s.SerializeInt("RandomizerFlags", (int)RandomizerFlags, "RandomizerFlags");
+            RandomizeBatchAfterLoad = s.SerializeBool("RandomizeBatchAfterLoad", RandomizeBatchAfterLoad, "RandomizeBatchAfterLoad");
+
             Log = s.SerializeBool("Log", Log);
             LogFile = s.SerializeString("LogFile", LogFile);
         }
-
+         
         /// <summary>
         /// Saves the settings
         /// </summary>

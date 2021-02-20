@@ -338,7 +338,7 @@ namespace R1Engine
             }
         }
 
-        protected void CreateISO(Context context)
+        public void CreateISO(Context context)
         {
             // Get the xml file
             const string xmlFilePath = "disc.xml";

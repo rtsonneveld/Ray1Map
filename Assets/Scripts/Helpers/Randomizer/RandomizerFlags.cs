@@ -14,6 +14,7 @@ namespace R1Engine
         Follow = 1 << 5,
         States = 1 << 6,
         Type = 1 << 7,
+        RobinsCageRandomizer = 1 << 8,
 
         All = ~0
     }

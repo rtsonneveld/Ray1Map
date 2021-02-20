@@ -98,6 +98,13 @@ namespace R1Engine
 
                 if (Settings.ScreenshotEnumeration)
                     await ConvertLevelToPNGAsync();
+
+                Debug.Log("Settings.RandomizeBatchAfterLoad: "+ Settings.RandomizeBatchAfterLoad);
+                if (Settings.RandomizeBatchAfterLoad) {
+                    await Randomizer.BatchRandomizeAsync();
+                    Settings.RandomizeBatchAfterLoad = false;
+                    Application.Quit();
+                }
             }
         }
 
