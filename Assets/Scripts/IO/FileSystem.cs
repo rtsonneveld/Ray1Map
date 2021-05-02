@@ -69,7 +69,7 @@ namespace R1Engine {
 					//return null;
 				}
             } else {
-                return File.OpenRead(path);
+                return File.Open(path, FileMode.Open, FileAccess.ReadWrite);
             }
         }
 
@@ -78,7 +78,7 @@ namespace R1Engine {
 			if (FileSystem.mode == FileSystem.Mode.Web) { // || (Application.isEditor && UnityEditor.EditorUserBuildSettings.activeBuildTarget == UnityEditor.BuildTarget.WebGL)) {
 				return null; // Can't write in web mode
 			} else {
-				return recreateOnWrite ? File.Create(path) : File.OpenWrite(path);
+				return recreateOnWrite ? File.Create(path) : File.Open(path, FileMode.Open, FileAccess.ReadWrite); 
 			}
 		}
 

@@ -307,7 +307,7 @@ namespace R1Engine
 
         public override Unity_ObjAnimationCollisionPart[] ObjCollision => GetObjZDC().ToArray();
 
-        public override Unity_ObjAnimation CurrentAnimation => ObjManager.DES.ElementAtOrDefault(DESIndex)?.Data?.Graphics?.Animations.ElementAtOrDefault(AnimationIndex ?? -1);
+        public override Unity_ObjAnimation CurrentAnimation => ObjManager.DES.ElementAtOrDefault(DESIndex)?.Data?.Graphics?.Animations.ElementAtOrDefault(CurrentState.AnimationIndex);
         public override int AnimationFrame
         {
             get => EventData.RuntimeCurrentAnimFrame;

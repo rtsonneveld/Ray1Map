@@ -140,7 +140,7 @@ namespace R1Engine {
         /// Randomize settings
         public static string RandomizerSeed { get; set; }
         public static RandomizerFlags RandomizerFlags { get; set; }
-        public static bool RandomizeBatchAfterLoad { get; set; }
+        public static bool RandomizeBatch { get; set; }
 
         /// <summary>
         /// Gets the current directory based on the selected mode
@@ -259,7 +259,7 @@ namespace R1Engine {
 
             RandomizerSeed = s.SerializeString("RandomizerSeed", RandomizerSeed, "RandomizerSeed");
             RandomizerFlags = (RandomizerFlags)s.SerializeInt("RandomizerFlags", (int)RandomizerFlags, "RandomizerFlags");
-            RandomizeBatchAfterLoad = s.SerializeBool("RandomizeBatchAfterLoad", RandomizeBatchAfterLoad, "RandomizeBatchAfterLoad");
+            RandomizeBatch = s.SerializeBool("RandomizeBatch", RandomizeBatch, "RandomizeBatch");
 
             Log = s.SerializeBool("Log", Log);
             LogFile = s.SerializeString("LogFile", LogFile);

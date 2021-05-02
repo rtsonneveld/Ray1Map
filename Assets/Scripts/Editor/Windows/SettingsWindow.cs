@@ -510,7 +510,8 @@ public class SettingsWindow : UnityWindow
         DrawHeader("Randomizer");
 
         if (EditorButton("Run Randomizer")) {
-            Randomizer.Randomize(LevelEditorData.Level, Settings.RandomizerFlags, Settings.RandomizerSeed.GetHashCode(), 0);
+            string seed = $"{Settings.World},{Settings.Level},{Settings.RandomizerSeed}";
+            Randomizer.Randomize(LevelEditorData.Level, Settings.World, Settings.Level, Settings.RandomizerFlags, seed.GetHashCode(), 0, null);
         }
 
         if (EditorButton("Run Batch Randomizer"))

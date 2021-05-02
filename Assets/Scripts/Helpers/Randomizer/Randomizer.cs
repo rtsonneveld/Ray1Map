@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using R1Engine.Serialize;
 using UnityEngine;
 using Random = System.Random;
@@ -12,8 +15,6 @@ namespace R1Engine
     /// </summary>
     public static class Randomizer
     {
-
-
         #region Randomizer
 
         public static async UniTask BatchRandomizeAsync()
@@ -31,7 +32,11 @@ namespace R1Engine
                 var flag = Settings.RandomizerFlags;
 
                 // Enumerate every world
+                int totalLevels = manager.GetLevels(settings).First().Worlds.Sum(w => w.Maps.Length);
+                int progress = 0;
+
                 var worlds = manager.GetLevels(settings).First().Worlds;
+
                 foreach (var world in worlds) {
                     // Set the world
                     settings.World = world.Index;
@@ -39,42 +44,62 @@ namespace R1Engine
                     // Enumerate every level
                     foreach (var lvl in world.Maps) {
 
-                        Debug.Log("World: " + world.Index + ", lvl: " + lvl);
+                        var progressObj = new
+                        {
+                            world = world.Index,
+                            level = lvl,
+                            progress = (float) progress / totalLevels
+                        };
+                        Debug.Log("progress:"+JsonConvert.SerializeObject(progressObj));
 
-                        // Set the level
-                        settings.Level = lvl;
+                        // Save the level
+                        bool saveISO = world == worlds.Last() && lvl == world.Maps.Last();
 
-                        // Create the context
-                        using (var context = new Context(settings)) {
+                        if (flag > 0 || saveISO) { 
 
-                            // Load the files
-                            await manager.LoadFilesAsync(context);
+                            // Set the level
+                            settings.Level = lvl;
 
-                            // Load the level
-                            var level = await manager.LoadAsync(context, true);
+                            // Create the context
+                            using (var context = new Context(settings)) {
 
-                            // Randomize (only first map for now)
-                            Randomizer.Randomize(level, flag, $"{world.Index},{lvl},{Settings.RandomizerSeed}".GetHashCode(), 0);
+                                // Load the files
+                                await manager.LoadFilesAsync(context);
 
-                            context.Close();
+                                // Load the level
+                                var level = await manager.LoadAsync(context, true);
 
-                            // Save the level
-                            bool saveISO = world == worlds.Last() && lvl == world.Maps.Last();
+                                // Randomize (only first map for now)
+                                string seed = $"{world.Index},{lvl},{Settings.RandomizerSeed}";
+                                int seedHashCode = seed.GetHashCode();
+                                Debug.Log($"seed = {seed} (seedHashCode = {seedHashCode})");
 
-                            if (manager is R1_PS1_Manager ps1Manager) {
-                                await ps1Manager.SaveLevelAsync(context, level, false);
+                                Randomizer.Randomize(level, world.Index, lvl, flag, seedHashCode, 0);
 
-                                if (saveISO) {
-                                    Debug.Log("Saving ISO");
-                                    ps1Manager.CreateISO(context);
+                                context.Close();
+
+                                if (manager is R1_PS1_Manager ps1Manager) {
+                                    await ps1Manager.SaveLevelAsync(context, level, false);
+
+                                    if (saveISO) {
+
+                                        Debug.Log("Saving ISO");
+                                        ps1Manager.CreateISO(context);
+                                    }
+
+                                } else {
+                                    await manager.SaveLevelAsync(context, level);
                                 }
-
-                            } else {
-                                await manager.SaveLevelAsync(context, level);
                             }
+
                         }
+
+                        progress++;
                     }
                 }
+
+                Debug.Log("Randomizer Success");
+
             } catch (Exception ex) {
                 Debug.LogError(ex);
             }
@@ -89,26 +114,21 @@ namespace R1Engine
         /// <param name="flags">The flags</param>
         /// <param name="seed">An optional seed to use</param>
         /// <param name="map">The map index</param>
-        public static void Randomize(Unity_Level level, RandomizerFlags flags, int? seed, int map)
+        public static void Randomize(Unity_Level level, int wi, int li, RandomizerFlags flags, int? seed, int map)
         {
-            var random = seed != null ? new Random(seed.Value) : new Random();
+            var random = seed != null ? new CrossPlatformRandom(seed.Value) : new CrossPlatformRandom();
+
             var maxX = level.Maps[map].Width * Settings.CellSize;
             var maxY = level.Maps[map].Height * Settings.CellSize;
 
             // Enumerate every event
-            foreach (var eventData in level.EventData
-                .Select(eventData => new
-                {
-                    obj = (Unity_Object_R1)eventData,
-                    isAlways = eventData.IsAlways,
-                    isEditor = eventData.IsEditor
-                })
-                .Where(x => !x.isAlways && !x.isEditor)
-                .Where(x => x.obj.EventData.Type != R1_EventType.TYPE_RAY_POS &&
-                            x.obj.EventData.Type != R1_EventType.TYPE_PANCARTE &&
-                            x.obj.EventData.Type != R1_EventType.TYPE_SIGNPOST)
-                .Select(x => x.obj))
+            foreach (var eventData in level.EventData.Select(x=>x as Unity_Object_R1)
+                .Where(x => !x.IsAlways && !x.IsEditor)
+                .Where(x => x.EventData.Type != R1_EventType.TYPE_RAY_POS &&
+                            x.EventData.Type != R1_EventType.TYPE_PANCARTE &&
+                            x.EventData.Type != R1_EventType.TYPE_SIGNPOST))
             {
+
                 if (flags.HasFlag(RandomizerFlags.Pos))
                 {
                     eventData.XPosition = (short)random.Next(0, maxX);
@@ -152,8 +172,15 @@ namespace R1Engine
             }
 
 
-            if (flags.HasFlag(RandomizerFlags.RobinsCageRandomizer)) {
-                CageLocationRandomizer.Randomize(level, seed);
+            if (flags.HasFlag(RandomizerFlags.EventLocationRandomizer)) {
+                EventLocationRandomizer.Randomize(level, wi, li, seed);
+            }
+
+            if (flags.HasFlag(RandomizerFlags.EventLocationRandomizerCagesOnly)) {
+                EventLocationRandomizer.Randomize(level, wi, li, seed, new List<R1_EventType>()
+                {
+                    R1_EventType.TYPE_CAGE
+                });
             }
         }
     }

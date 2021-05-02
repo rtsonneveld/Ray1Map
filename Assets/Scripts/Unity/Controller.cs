@@ -85,6 +85,16 @@ namespace R1Engine
             LoadState = State.Loading;
             DetailedState = "Starting...";
 
+            if (Settings.RandomizeBatch) {
+                Debug.Log("Start RandomizeBatch"); 
+                await Randomizer.BatchRandomizeAsync();
+
+                Settings.RandomizeBatch = false;
+                Debug.Log("End RandomizeBatch");
+                Application.Quit();
+                return;
+            }
+
             // Create the context
             LevelEditorData.MainContext = new Context(Settings.GetGameSettings);
             await levelController.LoadLevelAsync(Settings.GetGameManager, LevelEditorData.MainContext);
